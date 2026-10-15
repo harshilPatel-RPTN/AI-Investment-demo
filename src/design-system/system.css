@@ -1,0 +1,114 @@
+/*
+ * Visual system layer — loaded after tokens/shell/modules so it can normalise them.
+ * Rules: spacing on the 4px scale (4 · 8 · 12 · 16 · 24 · 32), five text sizes
+ * (11 · 12 · 13 · 15 · 18px), raised surfaces only for top-level containers, and
+ * nested content kept flat so shadows don't stack.
+ */
+:root {
+  --space-8: 32px;
+  --fs-xs: 11px;   /* captions, timestamps, badges */
+  --fs-sm: 12px;   /* labels, secondary text */
+  --fs-md: 13px;   /* body (= --fs default) */
+  --fs-lg: 15px;   /* panel headings, key values */
+  --fs-xl: 18px;   /* primary values / page headings */
+}
+
+/* ---------- Typography: nothing below 11px, labels readable ---------- */
+.small { font-size: max(var(--fs-sm), 0.923em); }
+.tiny { font-size: max(var(--fs-xs), 0.846em); }
+.field > label, .label {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.section-title { font-size: var(--fs-xs); letter-spacing: 0.06em; }
+.sidebar-section, .palette-group, .badge-count, .sim-badge, .cm-demo { font-size: var(--fs-xs); }
+.dock-item .count { font-size: 10px; }
+kbd { font-size: var(--fs-xs); }
+.stat .value { font-size: var(--fs-lg); }
+
+/* ---------- Surfaces: one raised level per container ---------- */
+/* Cards inside a window are separated by a hairline and a tint, not another double shadow. */
+.window-body .neu-soft,
+.window-body .neu-raised {
+  box-shadow: none;
+  border-color: var(--border-subtle);
+}
+.window-body .neu-raised { background: var(--surface-raised); }
+/* A card inside a card is just a grouping: no second border or fill. */
+.window-body .neu-soft .neu-soft,
+.window-body .neu-raised .neu-soft { background: transparent; border-color: transparent; padding-left: 0; padding-right: 0; }
+/* Popovers and menus still float above everything. */
+.window-body .menu.neu-raised,
+.window-body .popover.neu-raised {
+  box-shadow: 0 12px 32px var(--shadow-dark), 0 0 0 1px var(--border-subtle);
+}
+/* Buttons inside windows get a lighter lift so rows of controls read as one toolbar. */
+.window-body .btn:not(.primary):not(.ghost) {
+  box-shadow: calc(-2px * var(--sh)) calc(-2px * var(--sh)) calc(5px * var(--sh)) var(--shadow-light), calc(2px * var(--sh)) calc(2px * var(--sh)) calc(6px * var(--sh)) var(--shadow-dark);
+}
+
+/* ---------- Spacing: 4px scale ---------- */
+.card { padding: var(--space-3); }
+.module { gap: var(--space-3); }
+.window-titlebar { gap: var(--space-2); padding: 0 var(--space-1) 0 var(--space-3); }
+.window-controls { gap: var(--space-1); }
+.win-btn { opacity: 0.7; }
+.window:hover .win-btn, .window.focused .win-btn, .win-btn:focus-visible { opacity: 1; }
+
+/* ---------- Top bar ---------- */
+.topbar { gap: var(--space-2); padding: 0 var(--space-3); }
+.topbar-sep { width: 1px; height: 22px; background: var(--border-subtle); flex: none; margin: 0 var(--space-1); }
+
+/* ---------- Workspace toolbar: task tabs · layout · status · context ---------- */
+.ws-toolbar { gap: var(--space-2); padding: var(--space-1) var(--space-3); min-height: 44px; }
+.ws-tasks { flex: none; padding: 3px; }
+.ws-tasks .tab { height: 28px; padding: 0 var(--space-3); font-weight: 500; white-space: nowrap; }
+.ws-saved { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.ws-saved svg { color: var(--positive); }
+.ws-asof { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.ws-toolbar > .ws-context { flex: 0 1 230px; min-width: 150px; max-width: 230px; }
+@media (max-width: 1500px) {
+  .ws-asof, .ws-saved, .ws-unit, .ws-toolbar .hide-md { display: none; }
+}
+@media (max-width: 1320px) {
+  .ws-tasks .tab { padding: 0 var(--space-2); }
+}
+
+/* ---------- Market Summary strip ---------- */
+.ms-root { display: flex; flex-direction: column; gap: var(--space-2); height: 100%; }
+.ms-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-2); min-height: 0; }
+.ms-tile {
+  position: relative; display: flex; align-items: center; gap: var(--space-2); min-width: 0;
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+  background: var(--surface-raised); border: 1px solid var(--border-subtle);
+  transition: border-color .15s, background .15s;
+}
+.ms-tile:hover { border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+.ms-tile.selected { border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 6%, var(--surface-raised)); }
+.ms-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ms-head { display: flex; align-items: baseline; gap: var(--space-2); min-width: 0; }
+.ms-market { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); font-weight: 600; }
+.ms-symbol { font-size: var(--fs-sm); color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
+.ms-price { font-size: var(--fs-xl); font-weight: 600; line-height: 1.2; white-space: nowrap; }
+.ms-foot { display: flex; align-items: baseline; gap: var(--space-2); font-size: var(--fs-sm); white-space: nowrap; }
+.ms-unit { font-size: var(--fs-xs); color: var(--text-muted); }
+.ms-spark { flex: none; opacity: .9; }
+.ms-cycle {
+  position: absolute; top: var(--space-1); right: var(--space-1); height: 18px; padding: 0 6px; border-radius: 999px;
+  border: 1px solid var(--border-subtle); background: var(--surface-inset); color: var(--text-muted); font-size: 10px; cursor: pointer;
+}
+.ms-cycle:hover { color: var(--accent); }
+.ms-asof { display: none; }
+
+/* ---------- Module grids that refused to shrink ---------- */
+.dash-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+/* ---------- AI reasoning disclosure ---------- */
+.ai-thinking { margin-bottom: var(--space-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); }
+.ai-thinking > summary { cursor: pointer; padding: var(--space-1) var(--space-2); font-size: var(--fs-sm); color: var(--text-secondary); list-style: none; }
+.ai-thinking > summary::before { content: '▸ '; color: var(--accent); }
+.ai-thinking[open] > summary::before { content: '▾ '; }
+.ai-thinking > :not(summary) { padding: 0 var(--space-3) var(--space-2); font-size: var(--fs-sm); color: var(--text-secondary); }

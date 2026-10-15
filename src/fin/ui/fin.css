@@ -1,0 +1,109 @@
+/* ===== FIN — voice-first market companion ===== */
+
+/* Orb: layered radial gradients from theme tokens; size reacts to --lvl (real audio level 0..1). */
+.fin-orb { --lvl: 0; position: relative; flex: none; display: grid; place-items: center; }
+.fin-orb-halo {
+  position: absolute; inset: 6%; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 28%, transparent) 0%, transparent 68%);
+  transform: scale(calc(1 + var(--lvl) * 0.35)); transition: transform .08s linear, opacity .3s ease; opacity: .7;
+}
+.fin-orb-core {
+  position: relative; width: 62%; height: 62%; border-radius: 50%; overflow: hidden;
+  background:
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, #fff 55%, var(--accent)) 0%, transparent 34%),
+    radial-gradient(circle at 60% 70%, var(--accent-strong) 0%, transparent 62%),
+    radial-gradient(circle at 50% 50%, var(--accent) 0%, color-mix(in srgb, var(--accent) 35%, var(--surface-inset)) 72%);
+  box-shadow:
+    calc(-6px * var(--sh)) calc(-6px * var(--sh)) calc(16px * var(--sh)) var(--shadow-light),
+    calc(8px * var(--sh)) calc(8px * var(--sh)) calc(22px * var(--sh)) var(--shadow-dark),
+    inset 0 0 22px color-mix(in srgb, #000 25%, transparent);
+  transform: scale(calc(1 + var(--lvl) * 0.12)); transition: transform .08s linear;
+}
+.fin-orb-sheen { position: absolute; inset: -20%; background: conic-gradient(from 0deg, transparent 0 70%, color-mix(in srgb, #fff 30%, transparent) 80%, transparent 90%); opacity: 0; }
+.fin-orb-ring { position: absolute; inset: 14%; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent); opacity: 0; }
+
+.fin-idle .fin-orb-core, .fin-greeting .fin-orb-core { animation: fin-breathe 4.5s ease-in-out infinite; }
+.fin-listening .fin-orb-ring { opacity: .9; animation: fin-pulse 1.6s ease-out infinite; }
+.fin-thinking .fin-orb-sheen { opacity: 1; animation: fin-spin 1.4s linear infinite; }
+.fin-speaking .fin-orb-halo { opacity: 1; }
+.fin-paused .fin-orb-core { filter: saturate(.35); }
+.fin-disconnected .fin-orb-core { filter: grayscale(1) brightness(.7); }
+.fin-connecting .fin-orb-sheen { opacity: .7; animation: fin-spin 2.4s linear infinite; }
+@keyframes fin-breathe { 50% { transform: scale(1.04); } }
+@keyframes fin-pulse { from { transform: scale(.9); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+@keyframes fin-spin { to { transform: rotate(360deg); } }
+
+.fin-mini-orb {
+  display: inline-block; border-radius: 50%; flex: none;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, #fff 55%, var(--accent)), var(--accent) 45%, var(--accent-strong));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.fin-mini-orb.fin-speaking, .fin-mini-orb.fin-listening { animation: fin-mini 1s ease-in-out infinite; }
+.fin-mini-orb.fin-thinking, .fin-mini-orb.fin-connecting { animation: fin-mini 0.6s ease-in-out infinite; }
+.fin-mini-orb.fin-disconnected { filter: grayscale(1); }
+@keyframes fin-mini { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 25%, transparent); } }
+
+.fin-top-btn { gap: 6px; font-weight: 600; letter-spacing: .04em; }
+
+/* Greeting card */
+.fin-greeting {
+  position: fixed; right: 18px; bottom: 18px; z-index: 21000; width: min(430px, calc(100vw - 32px));
+  padding: 16px; animation: slidein .25s ease;
+}
+.fin-greeting-x { position: absolute; top: 8px; right: 8px; }
+
+/* Compact panel */
+.fin-compact {
+  position: fixed; right: 18px; bottom: 18px; z-index: 21000; width: min(400px, calc(100vw - 32px)); height: min(560px, calc(100dvh - 120px));
+  display: flex; flex-direction: column; overflow: hidden; animation: slidein .2s ease;
+}
+
+/* Immersive overlay */
+.fin-immersive {
+  position: fixed; inset: 0; z-index: 22000; display: grid; place-items: center; padding: 16px;
+  background: color-mix(in srgb, var(--os-bg) 72%, transparent);
+  backdrop-filter: blur(3px); animation: fadein .2s ease;
+}
+.fin-immersive-panel {
+  width: min(900px, 100%); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; gap: 12px; outline: none;
+  padding: 16px 18px; border-radius: var(--radius-xl); background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--border-subtle);
+  box-shadow: calc(-8px * var(--sh)) calc(-8px * var(--sh)) calc(22px * var(--sh)) var(--shadow-light), calc(10px * var(--sh)) calc(10px * var(--sh)) calc(30px * var(--sh)) var(--shadow-dark);
+}
+.fin-immersive-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fin-stage { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.fin-status { font-size: .85em; color: var(--text-secondary); letter-spacing: .06em; text-transform: uppercase; }
+.fin-section { display: flex; flex-direction: column; gap: 8px; }
+.fin-section-cards { display: flex; gap: 10px; flex-wrap: wrap; }
+.fin-card { padding: 8px 10px; min-width: 170px; display: flex; flex-direction: column; gap: 2px; }
+.fin-highlight { border-color: color-mix(in srgb, var(--accent) 55%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent); }
+.fin-dots { display: flex; gap: 5px; }
+.fin-dot { width: 10px; height: 10px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; background: var(--surface-inset); box-shadow: inset 1px 1px 2px rgba(0,0,0,.35); }
+.fin-dot.done { background: color-mix(in srgb, var(--accent) 45%, var(--surface-inset)); }
+.fin-dot.on { background: var(--accent); }
+
+.fin-captions { flex: 1 1 auto; min-height: 120px; max-height: 32vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--surface-inset); }
+.fin-captions.compact { max-height: none; min-height: 0; border-radius: 0; background: transparent; }
+.fin-cap { display: flex; gap: 8px; line-height: 1.5; }
+.fin-cap-who { flex: none; width: 30px; font-size: .75em; font-weight: 700; letter-spacing: .06em; color: var(--text-muted); padding-top: 2px; }
+.fin-cap.fin .fin-cap-who { color: var(--accent); }
+.fin-cap.fin .fin-cap-text { font-size: 1.04em; }
+.fin-cap.user .fin-cap-text { color: var(--text-secondary); }
+.fin-cap.live .fin-cap-text::after { content: '▍'; color: var(--accent); margin-left: 2px; animation: fin-blink 1s steps(2) infinite; }
+@keyframes fin-blink { 50% { opacity: 0; } }
+.fin-cap-system { font-size: .8em; color: var(--text-muted); text-align: center; padding: 2px 6px; }
+.fin-cap-system.warning { color: var(--warning); }
+.fin-cap-system.error { color: var(--negative); }
+
+.fin-bottom { display: flex; flex-direction: column; gap: 8px; }
+.fin-controls { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.fin-composer { display: flex; gap: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fin-orb *, .fin-mini-orb { animation: none !important; transition: none !important; }
+  .fin-cap.live .fin-cap-text::after { animation: none; }
+}
+@media (max-height: 760px) {
+  .fin-stage .fin-orb { width: 130px !important; height: 130px !important; }
+  .fin-captions { max-height: 24vh; }
+}
