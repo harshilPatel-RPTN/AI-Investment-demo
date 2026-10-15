@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CalendarClock } from 'lucide-react';
 import type { ModuleProps } from '../types';
 import { Empty } from '../../components/ui';
+import { apiFetch } from '../../lib/apiFetch';
 
 interface LiveEvent {
   id: string;
@@ -41,7 +42,7 @@ export default function UpcomingEvents({ frame, updateSettings }: ModuleProps) {
     let alive = true;
     const load = async () => {
       try {
-        const r = await fetch('/api/live/calendar?days=14');
+        const r = await apiFetch('/api/live/calendar?days=14');
         const j = (await r.json()) as { ok: boolean; events?: LiveEvent[]; error?: string };
         if (!alive) return;
         if (j.ok) {

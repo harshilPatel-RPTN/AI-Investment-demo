@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useApp } from '../store/appStore';
+import { apiFetch } from '../lib/apiFetch';
 import { getInstrument } from '../data/instruments';
 import { buildBriefingContext, instrumentNote } from './briefingContext';
 import { localBriefing, type BriefingSection } from './localBriefing';
@@ -311,7 +312,7 @@ export const useFin = create<FinState & FinActions>((set, get) => {
       const ctx = buildBriefingContext(useApp.getState().selectedInstrumentId);
       const fetchBriefing = async (): Promise<Pick<Briefing, 'sections' | 'source' | 'warnings'>> => {
         try {
-          const res = await fetch('/api/fin/briefing', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ length, context: ctx }) });
+          const res = await apiFetch('/api/fin/briefing', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ length, context: ctx }) });
           const data = (await res.json()) as { ok: boolean; sections?: BriefingSection[]; warnings?: string[]; error?: string };
           if (data.ok && data.sections?.length) return { sections: data.sections, source: 'ai', warnings: data.warnings ?? [] };
           sys(`AI briefing unavailable (${data.error ?? 'unknown error'}). Using a local rule-based briefing from the same evidence.`, 'warning');

@@ -1,5 +1,6 @@
 import type { AIRequest, AIResponse } from '../types/ai';
 import { useApp } from '../store/appStore';
+import { apiFetch } from './apiFetch';
 
 const TIMEOUT_MS = 90_000; // server may try several fallback models
 
@@ -11,7 +12,7 @@ export async function callAI(req: AIRequest, external?: AbortSignal): Promise<AI
   external?.addEventListener('abort', onAbort);
   const store = useApp.getState();
   try {
-    const res = await fetch('/api/ai/analyze', {
+    const res = await apiFetch('/api/ai/analyze', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(req),
@@ -50,7 +51,7 @@ export async function checkAIHealth(): Promise<void> {
   const store = useApp.getState();
   store.set({ aiStatus: 'checking' });
   try {
-    const res = await fetch('/api/ai/health');
+    const res = await apiFetch('/api/ai/health');
     const data = (await res.json()) as { ok: boolean; hasKey: boolean; model: string };
     store.set({ aiStatus: data.hasKey ? 'online' : 'no-key', aiModel: data.model });
   } catch {

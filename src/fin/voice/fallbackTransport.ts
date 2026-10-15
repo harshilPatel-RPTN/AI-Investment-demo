@@ -1,4 +1,5 @@
 import { useApp } from '../../store/appStore';
+import { apiFetch } from '../../lib/apiFetch';
 import { finVoice } from '../voices';
 import type { TransportEvents, VoiceTransport } from './transport';
 
@@ -115,7 +116,7 @@ export class FallbackTransport implements VoiceTransport {
     this.ev.onStatus('thinking');
     this.abort = new AbortController();
     try {
-      const res = await fetch('/api/fin/chat', {
+      const res = await apiFetch('/api/fin/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ question: text, history: history.slice(-12), context: { briefingContext: this.context.slice(0, 26000) } }),

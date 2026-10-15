@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ExternalLink, Newspaper, RefreshCw } from 'lucide-react';
 import type { ModuleProps } from '../types';
 import { Empty } from '../../components/ui';
+import { apiFetch } from '../../lib/apiFetch';
 
 type Asset = 'gold' | 'silver' | 'oil' | 'forex';
 interface Item {
@@ -23,6 +24,8 @@ interface Resp {
   refreshing: boolean;
   error: string | null;
   source: { name: string; url: string };
+  /** Hardcoded headlines bundled with the site (no server to fetch fresh news). */
+  snapshot?: boolean;
 }
 
 const FILTERS: Array<{ id: 'all' | Asset; label: string }> = [
@@ -48,7 +51,7 @@ export default function MarketNews({ frame, updateSettings }: ModuleProps) {
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch('/api/live/news');
+      const r = await apiFetch('/api/live/news');
       setData((await r.json()) as Resp);
       setFailed(false);
     } catch {
@@ -82,7 +85,7 @@ export default function MarketNews({ frame, updateSettings }: ModuleProps) {
 
       <div className="mn-list">
         {!data && !failed && [0, 1, 2, 3].map((i) => <div key={i} className="mn-skel"><div className="skeleton" style={{ width: '85%' }} /><div className="skeleton" style={{ width: '45%' }} /></div>)}
-        {failed && <Empty icon={<Newspaper />} title="News is unavailable" hint="The news server couldn't be reached. Check that npm run dev is running." />}
+        {failed && <Empty icon={<Newspaper />} title="News is unavailable" hint="Saved headlines could not be loaded." />}
         {data && !items.length && (
           <Empty icon={<Newspaper />} title={data.refreshing ? 'Gathering today’s market news…' : 'No headlines for this market right now'} hint={data.refreshing ? 'This takes about a minute the first time.' : data.error ?? undefined}>
             {data.refreshing && <span className="spinner" />}
@@ -103,7 +106,7 @@ export default function MarketNews({ frame, updateSettings }: ModuleProps) {
       </div>
 
       <div className="mn-foot">
-        <span className="live-dot" /> Live · <a href={data?.source.url ?? 'https://news.google.com/'} target="_blank" rel="noopener noreferrer">{data?.source.name ?? 'Google News'}</a>
+        {data?.snapshot ? 'Saved headlines · ' : <><span className="live-dot" /> Live · </>}<a href={data?.source.url ?? 'https://news.google.com/'} target="_blank" rel="noopener noreferrer">{data?.source.name ?? 'Google News'}</a>
         {data?.ranked ? ' · AI-ranked for market impact' : ' · keyword-filtered'}
         {data?.fetchedAt && <span className="muted"> · updated {ago(data.fetchedAt)}</span>}
       </div>

@@ -1,4 +1,5 @@
 import { useApp } from '../../store/appStore';
+import { apiFetch } from '../../lib/apiFetch';
 import type { Session } from '@google/genai';
 import { analyserLevel, MicCapture, PcmPlayer } from './audio';
 import type { TransportEvents, VoiceTransport } from './transport';
@@ -8,6 +9,7 @@ interface TokenResponse {
   ok: boolean;
   token?: string;
   model?: string;
+  config?: object;
   hasMore?: boolean;
   code?: string;
   error?: string;
@@ -50,11 +52,11 @@ export class LiveTransport implements VoiceTransport {
     let attempt = 0;
     let lastErr = 'Voice connection failed.';
     for (;;) {
-      const res = await fetch('/api/fin/token', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ attempt, tools: CONTROL_TOOLS, voice: useApp.getState().finVoice }) });
+      const res = await apiFetch('/api/fin/token', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ attempt, tools: CONTROL_TOOLS, voice: useApp.getState().finVoice }) });
       const tok = (await res.json().catch(() => ({ ok: false, error: `Token request failed (HTTP ${res.status}).` }))) as TokenResponse;
       if (!tok.ok || !tok.token) throw Object.assign(new Error(tok.error ?? 'Could not get a voice token.'), { code: tok.code ?? 'token' });
       try {
-        await this.open(new GoogleGenAI({ apiKey: tok.token, httpOptions: { apiVersion: 'v1alpha' } }), tok.model!);
+        await this.open(new GoogleGenAI({ apiKey: tok.token, httpOptions: { apiVersion: 'v1alpha' } }), tok.model!, tok.config ?? {});
         this.label = `Live voice · ${tok.model}`;
         break;
       } catch (e) {
@@ -68,7 +70,7 @@ export class LiveTransport implements VoiceTransport {
     this.ev.onStatus('idle');
   }
 
-  private open(ai: InstanceType<typeof import('@google/genai').GoogleGenAI>, model: string): Promise<void> {
+  private open(ai: InstanceType<typeof import('@google/genai').GoogleGenAI>, model: string, config: object): Promise<void> {
     return new Promise((resolve, reject) => {
       // Ready only when BOTH the server's setupComplete arrived AND connect() returned the session
       // (setupComplete can arrive before the connect promise resolves).
@@ -86,6 +88,8 @@ export class LiveTransport implements VoiceTransport {
       ai.live
         .connect({
           model,
+          // Persona, tools, voice and transcription settings (built in src/backend/fin.ts).
+          config: config as never,
           callbacks: {
             onmessage: (m) => {
               if (m.setupComplete) {
