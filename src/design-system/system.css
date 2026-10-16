@@ -112,3 +112,9 @@ kbd { font-size: var(--fs-xs); }
 .ai-thinking > summary::before { content: '▸ '; color: var(--accent); }
 .ai-thinking[open] > summary::before { content: '▾ '; }
 .ai-thinking > :not(summary) { padding: 0 var(--space-3) var(--space-2); font-size: var(--fs-sm); color: var(--text-secondary); }
+
+/* ---------- Window resize handles ---------- */
+/* Handles sit above the window content (charts paint on positioned canvases that used to cover them),
+   so every edge and corner can be grabbed. */
+.win-resize-handles > div { z-index: 30; }
+.win-resize-handles > div:hover { background: color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 4px; }

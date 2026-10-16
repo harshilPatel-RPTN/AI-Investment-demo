@@ -110,6 +110,12 @@ function WindowMenu({ f, onRename, close, anchor, portalRef }: { f: WidgetFrame;
   );
 }
 
+/** First manual move/resize while auto-arrange is on: tell the user their layout is now kept as placed. */
+function noteManualLayout() {
+  if (!useWorkspace.getState().autoArrange) return;
+  useApp.getState().toast({ title: 'Free layout', body: 'Auto-arrange is now off, so cards stay exactly where and how big you make them. Turn Auto-arrange back on to tidy the screen.', tone: 'info' });
+}
+
 function WindowFrameInner({ f, focused, guides, snap, preview }: { f: WidgetFrame; focused: boolean; guides: DragGuides; snap: boolean; preview?: { x: number; y: number; width?: number; height?: number } }) {
   const meta = APP_MAP[f.type];
   const Icon = meta.icon;
@@ -155,6 +161,7 @@ function WindowFrameInner({ f, focused, guides, snap, preview }: { f: WidgetFram
       maxWidth={canvas.w}
       maxHeight={canvas.h}
       dragHandleClassName="window-drag"
+      resizeHandleWrapperClass="win-resize-handles"
       cancel=".no-drag"
       dragGrid={grid}
       resizeGrid={grid}
@@ -189,14 +196,20 @@ function WindowFrameInner({ f, focused, guides, snap, preview }: { f: WidgetFram
         }
         const snapped = guides.onDrag(f.id, d.x, d.y, f.width, f.height);
         // Commit first, then drop the preview, so the other cards never flash back.
-        if (snapped.x !== f.x || snapped.y !== f.y) moveWindow(f.id, snapped.x, snapped.y);
+        if (snapped.x !== f.x || snapped.y !== f.y) {
+          noteManualLayout();
+          moveWindow(f.id, snapped.x, snapped.y);
+        }
         guides.onDragEnd();
       }}
       onResizeStart={() => setMoving(true)}
       onResize={(_e, _dir, ref, _delta, p) => guides.onResize(f.id, p.x, p.y, ref.offsetWidth, ref.offsetHeight)}
       onResizeStop={(_e, _dir, ref, _delta, p) => {
         setMoving(false);
-        resizeWindow(f.id, p.x, p.y, ref.offsetWidth, ref.offsetHeight);
+        if (ref.offsetWidth !== f.width || ref.offsetHeight !== f.height || p.x !== f.x || p.y !== f.y) {
+          noteManualLayout();
+          resizeWindow(f.id, p.x, p.y, ref.offsetWidth, ref.offsetHeight);
+        }
         guides.onDragEnd();
       }}
     >

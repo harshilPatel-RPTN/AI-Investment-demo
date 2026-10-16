@@ -446,13 +446,21 @@ export const useWorkspace = create<WorkspaceState & WorkspaceActions>()(
             return top > 500 ? normaliseZ(next) : next;
           }, false);
         },
-        moveWindow: (id, x, y) => commit(mapOne(id, (f) => clampFrame({ ...f, x, y, dockSide: null }, get().canvas)), true, id),
+        // A hand-placed card stays exactly where it was dropped: manual moves switch smart auto-arrange off
+        // (otherwise the next re-arrange would undo them). Other cards only move to avoid overlap.
+        moveWindow: (id, x, y) => {
+          if (get().autoArrange) set({ autoArrange: false });
+          commit(mapOne(id, (f) => clampFrame({ ...f, x, y, dockSide: null }, get().canvas)), true, id);
+        },
         swapWindows: (id, targetId) => commit((ws) => swapFrames(ws, id, targetId, get().canvas), true, id),
         closeAllWindows: () => commit((ws) => (ws.some((f) => !f.locked) ? ws.filter((f) => f.locked) : ws)),
         minimizeAllWindows: () => commit((ws) => (ws.some((f) => !f.locked && !f.minimized) ? ws.map((f) => (f.locked ? f : { ...f, minimized: true })) : ws)),
         restoreAllWindows: () => commit(arranged((ws) => (ws.some((f) => f.minimized || !f.visible) ? ws.map((f) => ({ ...f, minimized: false, visible: true })) : ws))),
-        resizeWindow: (id, x, y, w, h) =>
-          commit(mapOne(id, (f) => clampFrame({ ...f, x, y, width: w, height: h, prefW: Math.round(w), prefH: Math.round(h), dockSide: null }, get().canvas)), true, get().autoArrange ? undefined : id),
+        // Same for resizing: the card keeps the size you drew (and remembers it for the next auto-arrange).
+        resizeWindow: (id, x, y, w, h) => {
+          if (get().autoArrange) set({ autoArrange: false });
+          commit(mapOne(id, (f) => clampFrame({ ...f, x, y, width: w, height: h, prefW: Math.round(w), prefH: Math.round(h), dockSide: null }, get().canvas)), true, id);
+        },
         toggleMinimize: (id) => {
           const wasMin = mineOf().find((f) => f.id === id)?.minimized;
           commit(arranged(mapOne(id, (f) => ({ ...f, minimized: !f.minimized, zIndex: f.minimized ? maxZ(mineOf()) + 1 : f.zIndex })), wasMin ? id : undefined));

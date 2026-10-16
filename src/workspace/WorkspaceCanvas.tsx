@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutGrid } from 'lucide-react';
 import { useWorkspace } from './WorkspaceStore';
 import { resolveLayout } from './packLayout';
-import { smartArrange } from './smartArrange';
 import { useScreenWindows } from './useScreenWindows';
 import { TEAROFF_TARGET_ID, useTearOff } from './tearOff';
 import { ExternalLink } from 'lucide-react';
@@ -70,23 +69,15 @@ export function WorkspaceCanvas() {
     const s = useWorkspace.getState();
     const current = windowsRef.current;
     const next: Record<string, { x: number; y: number; width?: number; height?: number }> = {};
-    let landing: { x: number; y: number; width: number; height: number } | null = null;
-    if (s.autoArrange) {
-      // Same smart layout the store will commit: others move AND resize; the ghost shows the landing slot.
-      const moved = current.map((o) => (o.id === id ? (resizing ? { ...o, prefW: w, prefH: h } : { ...o, x, y }) : o));
-      const out = smartArrange(moved, s.canvas, resizing ? {} : { movingId: id, drop: { x, y, w, h } });
-      out.forEach((o, i) => {
-        const c = current[i];
-        if (o.id === id) landing = { x: o.x, y: o.y, width: o.width, height: o.height };
-        else if (o.x !== c.x || o.y !== c.y || o.width !== c.width || o.height !== c.height) next[o.id] = { x: o.x, y: o.y, width: o.width, height: o.height };
-      });
-    } else {
-      const moved = current.map((o) => (o.id === id ? { ...o, x, y, width: w, height: h } : o));
-      const out = resolveLayout(moved, s.canvas.w, { fixedId: id, compact: false });
-      out.forEach((o, i) => {
-        if (o.id !== id && (o.x !== current[i].x || o.y !== current[i].y)) next[o.id] = { x: o.x, y: o.y };
-      });
-    }
+    // Manual moves are free: the card stays where you put it and only the cards it would overlap move away.
+    // (This matches the store, which switches auto-arrange off on a manual move or resize.)
+    void resizing;
+    const moved = current.map((o) => (o.id === id ? { ...o, x, y, width: w, height: h } : o));
+    const out = resolveLayout(moved, s.canvas.w, { fixedId: id, compact: false });
+    out.forEach((o, i) => {
+      if (o.id !== id && (o.x !== current[i].x || o.y !== current[i].y)) next[o.id] = { x: o.x, y: o.y };
+    });
+    const landing: { x: number; y: number; width: number; height: number } | null = null;
     setPreview((prev) => (JSON.stringify(prev ?? {}) === JSON.stringify(next) ? prev : next));
     setGhost((prev) => (JSON.stringify(prev) === JSON.stringify(landing) ? prev : landing));
   }
